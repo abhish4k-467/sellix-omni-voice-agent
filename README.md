@@ -1,43 +1,116 @@
-# Sellix Voice Agent
+<p align="center">
+  <img src="assets/sellix-banner.png" alt="Sellix Voice Agent" width="100%">
+</p>
 
-Ultra-low-latency voice conversational agent for Python.
+<h1 align="center">Sellix Voice Agent</h1>
+
+<p align="center">
+  Ultra-low-latency conversational AI voice agent powered by Faster-Whisper, Groq, and KittenTTS.
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#running-the-agent">Run</a> •
+  <a href="#ringg-ai-integration">Ringg AI</a>
+</p>
+
+---
+
+## Features
+
+* ⚡ Ultra-low-latency voice conversations
+* 🎙️ Faster-Whisper speech recognition
+* 🧠 Groq-powered streaming LLM responses
+* 🔊 Real-time KittenTTS voice synthesis
+* ✋ Instant interruption handling
+* 🌐 Browser-based voice interaction
+* 📞 Ringg AI outbound calling integration
+* 🔄 Missed-call callback automation
+* 🚀 Production-ready architecture
+
+---
 
 ## Architecture
 
-This voice agent operates with three core steps optimized for speed:
+```text
+Microphone
+    │
+    ▼
+Faster-Whisper (STT)
+    │
+    ▼
+Groq LLM Streaming
+    │
+    ▼
+Response Aggregator
+    │
+    ▼
+KittenTTS
+    │
+    ▼
+Browser Audio Playback
+```
 
-1. **STT (Faster-Whisper):** Continuously monitors your microphone level (RMS energy). When speaking stops, it pushes the small audio chunk to local CPU-optimized Whisper (`tiny.en`) for near-instant transcription.
-2. **LLM (Groq API):** Instantly submits text to Groq API (`openai/gpt-oss-20b`) with stream mode. As the text chunks stream back continuously, they are aggregated tightly into phrases.
-3. **TTS (KittenTTS):** Runs in a separate thread, synthesizes each phrase with KittenTTS, and streams the generated PCM chunks back to the browser for immediate playback.
-4. **Interruption Handling:** Using `threading.Event`, if you begin speaking while the TTS is playing, all queues are immediately flushed, enabling ultra-fast conversational latency without talking over each other. 
+### Speech-to-Text
 
-## Setup Instructions (Windows)
+The agent continuously monitors microphone RMS energy. When speech stops, audio is sent to a local Faster-Whisper model (`tiny.en`) for near-instant transcription.
 
-1. Ensure Python 3.10+ is installed.
-2. In powershell or command prompt run:
+### LLM Processing
+
+Transcribed text is streamed to Groq using `openai/gpt-oss-20b`. Responses arrive token-by-token and are grouped into natural speech phrases.
+
+### Text-to-Speech
+
+Generated phrases are synthesized by KittenTTS in a dedicated thread and streamed back to the browser for immediate playback.
+
+### Interruption Handling
+
+Using `threading.Event`, ongoing TTS playback is immediately cancelled when the user starts speaking, creating a natural conversational experience.
+
+---
+
+## Installation
+
+### Requirements
+
+* Windows
+* Python 3.10+
+* Microphone
+
+### Create Virtual Environment
+
 ```powershell
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Ensure PyAudio installs correctly on Windows. You may need to download the appropriate `.whl` if `pip install pyaudio` fails, or run `pipwin install pyaudio`.
+### PyAudio
 
-4. **KittenTTS Installation**: Install the backend dependencies, including the KittenTTS wheel:
+If installation fails:
+
 ```powershell
-pip install -r requirements.txt
+pipwin install pyaudio
 ```
 
-Optionally override the default KittenTTS model and voice with environment variables:
+or install a compatible wheel manually.
+
+### Optional KittenTTS Configuration
+
 ```powershell
 $env:KITTEN_MODEL="KittenML/kitten-tts-nano-0.8"
 $env:KITTEN_VOICE="Jasper"
 ```
 
-5. **Environment Variable**: Set your Groq API key:
+### Configure Groq API Key
+
 ```powershell
 $env:GROQ_API_KEY="gsk_your_key_here"
 ```
+
+---
 
 ## Running the Agent
 
@@ -45,17 +118,23 @@ $env:GROQ_API_KEY="gsk_your_key_here"
 python main.py
 ```
 
-## Plugging a different LLM Later
+---
 
-Inside `main.py`, locate `self.generate_response(user_text)`.
+## Switching LLM Providers
 
-To plug in another provider (e.g. OpenAI):
+Locate:
+
 ```python
-# Change self.groq_client to self.openai_client
+self.generate_response(user_text)
+```
+
+Example OpenAI replacement:
+
+```python
 import openai
+
 self.openai_client = openai.Client()
 
-# Then swap the completion call:
 completion = self.openai_client.chat.completions.create(
     model="gpt-4o-mini",
     messages=self.conversation_history,
@@ -63,11 +142,13 @@ completion = self.openai_client.chat.completions.create(
 )
 ```
 
-## Ringg AI Missed-Call Fallback Integration
+---
 
-This backend now supports Ringg API integration so your AI agent can call people back when you miss their call.
+# Ringg AI Integration
 
-Set these environment variables before starting the backend:
+Sellix supports Ringg AI outbound calling and missed-call recovery workflows.
+
+## Environment Variables
 
 ```powershell
 $env:RINGG_API_KEY="your_ringg_api_key"
@@ -78,91 +159,120 @@ $env:RINGG_BASE_URL="https://prod-api.ringg.ai/ca/api/v0"
 $env:RINGG_FALLBACK_WEBHOOK_SECRET="optional_shared_secret"
 ```
 
-### Endpoints Added
+---
 
-- GET /api/ringg/workspace
-    - Verifies X-API-KEY auth by reading workspace info.
+## API Endpoints
 
-- GET /api/ringg/call-history
-    - Pulls call history from Ringg.
+| Endpoint                                | Description                  |
+| --------------------------------------- | ---------------------------- |
+| `GET /api/ringg/workspace`              | Verify Ringg credentials     |
+| `GET /api/ringg/call-history`           | Fetch call history           |
+| `POST /api/ringg/call`                  | Start an outbound AI call    |
+| `POST /api/ringg/missed-call-fallback`  | Trigger missed-call callback |
+| `POST /api/webhooks/twilio/missed-call` | Twilio webhook adapter       |
+| `POST /api/webhooks/exotel/missed-call` | Exotel webhook adapter       |
 
-- POST /api/ringg/call
-    - Manually initiate an outbound AI call.
-    - Body example:
+---
 
-```json
-{
-    "name": "John Doe",
-    "mobile_number": "+919876543210",
-    "custom_args_values": {
-        "callee_name": "John",
-        "source": "manual"
-    }
-}
-```
-
-- POST /api/ringg/missed-call-fallback
-    - Use this as webhook target from your telephony provider when a call is missed.
-    - If status is missed/no_answer/unanswered, backend triggers Ringg outbound callback automatically.
-    - Include header X-FALLBACK-SECRET if RINGG_FALLBACK_WEBHOOK_SECRET is set.
-    - Body example:
+## Outbound Call Example
 
 ```json
 {
-    "caller_number": "+919876543210",
-    "to_number": "+918849835941",
-    "caller_name": "Amit",
-    "call_status": "no_answer",
-    "trigger_callback": true,
-    "custom_args_values": {
-        "reason": "user_missed_call"
-    }
+  "name": "John Doe",
+  "mobile_number": "+919876543210",
+  "custom_args_values": {
+    "callee_name": "John",
+    "source": "manual"
+  }
 }
 ```
 
-- POST /api/webhooks/twilio/missed-call
-    - Twilio-compatible adapter endpoint (accepts form-urlencoded or JSON payloads like CallStatus, From, To).
-    - Automatically maps Twilio fields into the fallback payload and triggers callback for missed/no-answer style statuses.
+---
 
-- POST /api/webhooks/exotel/missed-call
-    - Exotel-compatible adapter endpoint (accepts form-urlencoded or JSON payloads like CallStatus, CallFrom, CallTo).
-    - Automatically maps Exotel fields into the fallback payload and triggers callback for missed/no-answer style statuses.
+## Missed Call Example
 
-### How to Wire It End-to-End
+```json
+{
+  "caller_number": "+919876543210",
+  "to_number": "+918849835941",
+  "caller_name": "Amit",
+  "call_status": "no_answer",
+  "trigger_callback": true
+}
+```
 
-1. In Ringg dashboard, create/select an outbound assistant and copy:
-     - agent_id
-     - from_number_id
-2. Put them in backend env vars.
-3. In your phone system (Twilio, Exotel, etc.), configure "missed/no-answer" webhook to POST to:
-    - http://your-server:8000/api/webhooks/twilio/missed-call (for Twilio)
-    - http://your-server:8000/api/webhooks/exotel/missed-call (for Exotel)
-    - or keep using http://your-server:8000/api/ringg/missed-call-fallback (generic)
-4. Pass caller number and status in webhook payload.
-5. Include called number as to_number (or user_number). Backend will only trigger callback when it matches RINGG_OWNER_NUMBER.
-6. Backend auto-initiates Ringg callback using your AI assistant.
+---
 
-## Ringg AI Command-Driven Calling (Web App Voice)
+## End-to-End Setup
 
-You can ask Sellix directly in the web app to call someone on your behalf.
-Example voice commands:
+1. Create or select an outbound assistant in Ringg.
+2. Copy:
 
-- "Call Rahul at +9198xxxxxx10 and tell him I will be late."
-- "Call Prince" or "Call Ravi".
-- "Check what happened on that call."
+   * `agent_id`
+   * `from_number_id`
+3. Configure environment variables.
+4. Configure your telephony provider webhook:
 
-Backend behavior:
+   * `/api/webhooks/twilio/missed-call`
+   * `/api/webhooks/exotel/missed-call`
+5. Deploy and start the backend.
+6. Missed calls automatically trigger AI-powered callbacks.
 
-1. Sellix uses `ringg_call_contact` to place an outbound Ringg call.
-2. Sellix uses `ringg_get_call_report` to fetch call status and available summary/transcript from Ringg history.
-3. Sellix speaks back a short after-call update in the same voice session.
+---
 
-Requirements:
+# Voice Command Calling
 
-- `RINGG_API_KEY`, `RINGG_AGENT_ID`, and `RINGG_FROM_NUMBER_ID` must be set and valid.
-- Ringg call history should contain status/summary fields for best reporting quality.
+Users can instruct Sellix to place phone calls directly.
 
-Named contacts configured by default:
+### Example Commands
 
-- Prince: +918320696909
-- Ravi: +919925554337
+```text
+Call Rahul and tell him I'll be late.
+
+Call Prince.
+
+Call Ravi.
+
+Check what happened on that call.
+```
+
+### Workflow
+
+1. Sellix places a Ringg outbound call.
+2. Ringg executes the AI conversation.
+3. Sellix retrieves call history and summaries.
+4. Sellix reports the outcome back within the active voice session.
+
+---
+
+## Default Contacts
+
+| Name   | Number        |
+| ------ | ------------- |
+| Prince | +918320696909 |
+| Ravi   | +919925554337 |
+
+---
+
+## Tech Stack
+
+| Component          | Technology     |
+| ------------------ | -------------- |
+| Speech Recognition | Faster-Whisper |
+| LLM                | Groq           |
+| Text-to-Speech     | KittenTTS      |
+| Backend            | Python         |
+| Voice Streaming    | WebSocket      |
+| Telephony          | Ringg AI       |
+
+---
+
+## License
+
+MIT License
+
+---
+
+<p align="center">
+Built with ❤️ for ultra-fast AI voice conversations.
+</p>
