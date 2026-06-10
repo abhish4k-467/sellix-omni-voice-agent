@@ -245,15 +245,6 @@ Check what happened on that call.
 
 ---
 
-## Default Contacts
-
-| Name   | Number        |
-| ------ | ------------- |
-| Prince | +918320696909 |
-| Ravi   | +919925554337 |
-
----
-
 ## Tech Stack
 
 | Component          | Technology     |
