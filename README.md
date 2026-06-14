@@ -84,7 +84,7 @@ Using `threading.Event`, ongoing TTS playback is immediately cancelled when the 
 ## Pull Latest Image
 
 ```bash
-docker pull abhish4k/sellix:tagname
+docker pull abhish4k/sellix:v1
 ```
 
 ## Stop and Remove Existing Container
