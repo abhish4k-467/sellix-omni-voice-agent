@@ -87,12 +87,6 @@ Using `threading.Event`, ongoing TTS playback is immediately cancelled when the 
 docker pull abhish4k/sellix:v1
 ```
 
-## Stop and Remove Existing Container
-
-```bash
-docker rm -f sellix-container
-```
-
 ## Run Container
 
 ```bash
