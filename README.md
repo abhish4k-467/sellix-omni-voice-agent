@@ -75,7 +75,7 @@ Using `threading.Event`, ongoing TTS playback is immediately cancelled when the 
 
 ## Requirements
 
-* Windows
+* Windows/linux/MacOS
 * Python 3.10+
 * Microphone
   
