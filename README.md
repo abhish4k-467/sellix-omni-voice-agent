@@ -78,6 +78,81 @@ Using `threading.Event`, ongoing TTS playback is immediately cancelled when the 
 * Windows
 * Python 3.10+
 * Microphone
+  
+# Docker Deployment
+
+## Pull Latest Image
+
+```bash
+docker pull abhish4k/sellix:tagname
+```
+
+## Stop and Remove Existing Container
+
+```bash
+docker rm -f sellix-container
+```
+
+## Run Container
+
+```bash
+docker run -d \
+  --name sellix-container \
+  -e GROQ_API_KEY=YOUR_GROQ_API_KEY \
+  -e TAVILY_API_KEY=YOUR_TAVILY_API_KEY \
+  -p 8000:8000 \
+  abhish4k/sellix:v1
+```
+
+## Push New Docker Image
+
+After building your image locally:
+
+```bash
+docker build -t abhish4k/sellix:tagname .
+```
+
+Push it to Docker Hub:
+
+```bash
+docker push abhish4k/sellix:tagname
+```
+
+## Verify Container Status
+
+```bash
+docker ps
+```
+
+## View Container Logs
+
+```bash
+docker logs -f sellix-container
+```
+
+## Access Application
+
+Once the container is running, open:
+
+```
+http://localhost:8000
+```
+
+## Update to a New Version
+
+```bash
+docker pull abhish4k/sellix:tagname
+
+docker rm -f sellix-container
+
+docker run -d \
+  --name sellix-container \
+  -e GROQ_API_KEY=YOUR_GROQ_API_KEY \
+  -e TAVILY_API_KEY=YOUR_TAVILY_API_KEY \
+  -p 8000:8000 \
+  abhish4k/sellix:tagname
+```
+
 
 ### Create Virtual Environment
 
