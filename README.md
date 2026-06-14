@@ -71,7 +71,7 @@ Using `threading.Event`, ongoing TTS playback is immediately cancelled when the 
 
 ---
 
-## Installation
+### Installation
 
 ### Requirements
 
@@ -79,7 +79,7 @@ Using `threading.Event`, ongoing TTS playback is immediately cancelled when the 
 * Python 3.10+
 * Microphone
   
-# Docker Deployment
+## Docker Deployment (Recommended)
 
 ## Pull Latest Image
 
